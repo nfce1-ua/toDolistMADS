@@ -39,4 +39,23 @@ public class UsuarioGestionServiceTest {
         assertThat(usuarios).extracting(UsuarioData::getEmail)
                 .containsExactly("ana@ua", "luis@ua");
     }
+
+    @Test
+    public void soloPuedeHaberUnAdministrador() {
+        // GIVEN: un administrador registrado
+        UsuarioData admin = new UsuarioData();
+        admin.setEmail("admin@ua");
+        admin.setPassword("123");
+        admin.setAdministrador(true);
+        usuarioService.registrar(admin);
+        assertThat(usuarioService.existeAdministrador()).isTrue();
+
+        // WHEN, THEN: registrar otro administrador lanza excepción
+        UsuarioData otro = new UsuarioData();
+        otro.setEmail("otro@ua");
+        otro.setPassword("456");
+        otro.setAdministrador(true);
+        Assertions.assertThrows(UsuarioServiceException.class,
+                () -> usuarioService.registrar(otro));
+    }
 }
