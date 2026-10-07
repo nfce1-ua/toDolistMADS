@@ -104,4 +104,23 @@ public class RegistradosWebTest {
         this.mockMvc.perform(get("/registrados/5"))
                 .andExpect(status().isUnauthorized());
     }
+
+    @Test
+    public void administradorPuedeCambiarBloqueo() throws Exception {
+        logearComoAdministrador();
+
+        this.mockMvc.perform(post("/registrados/1/bloqueo"))
+                .andExpect(status().is3xxRedirection())
+                .andExpect(redirectedUrl("/registrados"));
+
+        verify(usuarioService).cambiarBloqueo(1L);
+    }
+
+    @Test
+    public void sinLoginNoPuedeCambiarBloqueo() throws Exception {
+        when(managerUserSession.usuarioLogeado()).thenReturn(null);
+
+        this.mockMvc.perform(post("/registrados/1/bloqueo"))
+                .andExpect(status().isUnauthorized());
+    }
 }

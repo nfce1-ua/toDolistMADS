@@ -58,4 +58,36 @@ public class UsuarioGestionServiceTest {
         Assertions.assertThrows(UsuarioServiceException.class,
                 () -> usuarioService.registrar(otro));
     }
+
+    @Test
+    public void bloquearUsuarioImpideElLogin() {
+        // GIVEN: un usuario normal que puede logearse
+        UsuarioData ana = registrar("ana@ua");
+        assertThat(usuarioService.login("ana@ua", "123"))
+                .isEqualTo(UsuarioService.LoginStatus.LOGIN_OK);
+
+        // WHEN: se bloquea
+        usuarioService.cambiarBloqueo(ana.getId());
+
+        // THEN: no puede logearse
+        assertThat(usuarioService.login("ana@ua", "123"))
+                .isEqualTo(UsuarioService.LoginStatus.USER_BLOCKED);
+
+        // y al volver a cambiar el estado, sí
+        usuarioService.cambiarBloqueo(ana.getId());
+        assertThat(usuarioService.login("ana@ua", "123"))
+                .isEqualTo(UsuarioService.LoginStatus.LOGIN_OK);
+    }
+
+    @Test
+    public void noSePuedeBloquearAlAdministrador() {
+        UsuarioData admin = new UsuarioData();
+        admin.setEmail("admin@ua");
+        admin.setPassword("123");
+        admin.setAdministrador(true);
+        UsuarioData adminBD = usuarioService.registrar(admin);
+
+        Assertions.assertThrows(UsuarioServiceException.class,
+                () -> usuarioService.cambiarBloqueo(adminBD.getId()));
+    }
 }
