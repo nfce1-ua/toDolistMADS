@@ -41,4 +41,31 @@ public class RegistradosWebTest {
                         containsString("ana.garcia@gmail.com"),
                         containsString("luis@ua"))));
     }
+
+    @Test
+    public void descripcionUsuarioMuestraDatosSinPassword() throws Exception {
+        // GIVEN: un usuario con contraseña en el servicio
+        UsuarioData ana = new UsuarioData();
+        ana.setId(1L);
+        ana.setEmail("ana.garcia@gmail.com");
+        ana.setNombre("Ana García");
+        ana.setPassword("secreta123");
+        when(usuarioService.findById(1L)).thenReturn(ana);
+
+        // WHEN, THEN: la descripción muestra sus datos, pero no la contraseña
+        this.mockMvc.perform(get("/registrados/1"))
+                .andExpect(content().string(allOf(
+                        containsString("ana.garcia@gmail.com"),
+                        containsString("Ana García"),
+                        not(containsString("secreta123")))));
+    }
+
+    @Test
+    public void descripcionUsuarioInexistenteDevuelve404() throws Exception {
+        // GIVEN: el servicio no encuentra el usuario 50 (el mock devuelve null)
+
+        // WHEN, THEN: la petición devuelve 404
+        this.mockMvc.perform(get("/registrados/50"))
+                .andExpect(status().isNotFound());
+    }
 }

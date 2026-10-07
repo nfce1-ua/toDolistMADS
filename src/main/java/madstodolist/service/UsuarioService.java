@@ -51,6 +51,8 @@ public class UsuarioService {
             throw new UsuarioServiceException("El usuario no tiene email");
         else if (usuario.getPassword() == null)
             throw new UsuarioServiceException("El usuario no tiene password");
+        else if (usuario.isAdministrador() && usuarioRepository.existsByAdministradorTrue())
+            throw new UsuarioServiceException("Ya existe un administrador en la aplicación");
         else {
             Usuario usuarioNuevo = modelMapper.map(usuario, Usuario.class);
             usuarioNuevo = usuarioRepository.save(usuarioNuevo);
@@ -83,5 +85,10 @@ public class UsuarioService {
                 .forEach(u -> usuarios.add(modelMapper.map(u, UsuarioData.class)));
         usuarios.sort(Comparator.comparing(UsuarioData::getId));
         return usuarios;
+    }
+
+    @Transactional(readOnly = true)
+    public boolean existeAdministrador() {
+        return usuarioRepository.existsByAdministradorTrue();
     }
 }

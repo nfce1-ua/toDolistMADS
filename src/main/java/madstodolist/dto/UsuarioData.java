@@ -50,6 +50,15 @@ public class UsuarioData {
         this.fechaNacimiento = fechaNacimiento;
     }
 
+    private boolean administrador;
+
+    public boolean isAdministrador() {
+        return administrador;
+    }
+
+    public void setAdministrador(boolean administrador) {
+        this.administrador = administrador;
+    }
     // Sobreescribimos equals y hashCode para que dos usuarios sean iguales
     // si tienen el mismo ID (ignoramos el resto de atributos)
 
