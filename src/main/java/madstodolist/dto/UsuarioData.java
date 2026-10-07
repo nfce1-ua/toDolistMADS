@@ -59,6 +59,16 @@ public class UsuarioData {
     public void setAdministrador(boolean administrador) {
         this.administrador = administrador;
     }
+
+    private boolean bloqueado;
+
+    public boolean isBloqueado() {
+        return bloqueado;
+    }
+
+    public void setBloqueado(boolean bloqueado) {
+        this.bloqueado = bloqueado;
+    }
     // Sobreescribimos equals y hashCode para que dos usuarios sean iguales
     // si tienen el mismo ID (ignoramos el resto de atributos)
 

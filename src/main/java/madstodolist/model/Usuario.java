@@ -121,6 +121,16 @@ public class Usuario implements Serializable {
         this.administrador = administrador;
     }
 
+    private boolean bloqueado;
+
+    public boolean isBloqueado() {
+        return bloqueado;
+    }
+
+    public void setBloqueado(boolean bloqueado) {
+        this.bloqueado = bloqueado;
+    }
+
     @Override
     public int hashCode() {
         // Generamos un hash basado en los campos obligatorios
