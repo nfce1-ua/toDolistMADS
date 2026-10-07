@@ -11,6 +11,7 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
 
 @Controller
 public class UsuarioController {
@@ -49,5 +50,12 @@ public class UsuarioController {
         }
         model.addAttribute("usuario", usuario);
         return "descripcionUsuario";
+    }
+
+    @PostMapping("/registrados/{id}/bloqueo")
+    public String cambiarBloqueo(@PathVariable(value = "id") Long idUsuario) {
+        comprobarAdministrador();
+        usuarioService.cambiarBloqueo(idUsuario);
+        return "redirect:/registrados";
     }
 }

@@ -18,6 +18,7 @@
         <tr>
           <th>Id</th>
           <th>Email</th>
+          <th>Estado</th>
           <th>Acción</th>
         </tr>
         </thead>
@@ -25,8 +26,16 @@
         <tr th:each="u : ${usuarios}">
           <td th:text="${u.id}"></td>
           <td th:text="${u.email}"></td>
+          <td th:text="${u.bloqueado} ? 'bloqueado' : 'activo'"></td>
           <td>
             <a class="btn btn-primary btn-xs" th:href="@{/registrados/{id}(id=${u.id})}">descripción</a>
+            <form th:if="${!u.administrador}"
+                  th:action="@{/registrados/{id}/bloqueo(id=${u.id})}"
+                  method="post" style="display:inline">
+              <button type="submit" class="btn btn-xs"
+                      th:classappend="${u.bloqueado} ? 'btn-success' : 'btn-warning'"
+                      th:text="${u.bloqueado} ? 'Habilitar' : 'Bloquear'"></button>
+            </form>
           </td>
         </tr>
         </tbody>
