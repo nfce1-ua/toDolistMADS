@@ -1,5 +1,6 @@
 package madstodolist.controller;
 
+import madstodolist.authentication.ManagerUserSession;
 import madstodolist.dto.UsuarioData;
 import madstodolist.service.UsuarioService;
 import org.junit.jupiter.api.Test;
@@ -26,8 +27,21 @@ public class RegistradosWebTest {
     @MockBean
     private UsuarioService usuarioService;
 
+    @MockBean
+    private ManagerUserSession managerUserSession;
+
+    // Simula un administrador logeado con id 99
+    private void logearComoAdministrador() {
+        UsuarioData admin = new UsuarioData();
+        admin.setId(99L);
+        admin.setAdministrador(true);
+        when(managerUserSession.usuarioLogeado()).thenReturn(99L);
+        when(usuarioService.findById(99L)).thenReturn(admin);
+    }
+
     @Test
     public void listadoUsuariosMuestraIdYEmail() throws Exception {
+        logearComoAdministrador();
         UsuarioData ana = new UsuarioData();
         ana.setId(1L);
         ana.setEmail("ana.garcia@gmail.com");
@@ -44,7 +58,7 @@ public class RegistradosWebTest {
 
     @Test
     public void descripcionUsuarioMuestraDatosSinPassword() throws Exception {
-        // GIVEN: un usuario con contraseña en el servicio
+        logearComoAdministrador();
         UsuarioData ana = new UsuarioData();
         ana.setId(1L);
         ana.setEmail("ana.garcia@gmail.com");
@@ -52,7 +66,6 @@ public class RegistradosWebTest {
         ana.setPassword("secreta123");
         when(usuarioService.findById(1L)).thenReturn(ana);
 
-        // WHEN, THEN: la descripción muestra sus datos, pero no la contraseña
         this.mockMvc.perform(get("/registrados/1"))
                 .andExpect(content().string(allOf(
                         containsString("ana.garcia@gmail.com"),
@@ -62,10 +75,33 @@ public class RegistradosWebTest {
 
     @Test
     public void descripcionUsuarioInexistenteDevuelve404() throws Exception {
-        // GIVEN: el servicio no encuentra el usuario 50 (el mock devuelve null)
+        logearComoAdministrador();
 
-        // WHEN, THEN: la petición devuelve 404
         this.mockMvc.perform(get("/registrados/50"))
                 .andExpect(status().isNotFound());
+    }
+
+    @Test
+    public void sinLoginDevuelveNoAutorizado() throws Exception {
+        when(managerUserSession.usuarioLogeado()).thenReturn(null);
+
+        this.mockMvc.perform(get("/registrados"))
+                .andExpect(status().isUnauthorized());
+        this.mockMvc.perform(get("/registrados/1"))
+                .andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    public void usuarioNormalDevuelveNoAutorizado() throws Exception {
+        UsuarioData normal = new UsuarioData();
+        normal.setId(5L);
+        normal.setAdministrador(false);
+        when(managerUserSession.usuarioLogeado()).thenReturn(5L);
+        when(usuarioService.findById(5L)).thenReturn(normal);
+
+        this.mockMvc.perform(get("/registrados"))
+                .andExpect(status().isUnauthorized());
+        this.mockMvc.perform(get("/registrados/5"))
+                .andExpect(status().isUnauthorized());
     }
 }

@@ -1,5 +1,8 @@
 package madstodolist.controller;
 
+import madstodolist.authentication.ManagerUserSession;
+import madstodolist.controller.exception.UsuarioNoAutorizadoException;
+import madstodolist.controller.exception.UsuarioNoLogeadoException;
 import madstodolist.controller.exception.UsuarioNotFoundException;
 import madstodolist.dto.UsuarioData;
 import madstodolist.service.UsuarioService;
@@ -15,14 +18,31 @@ public class UsuarioController {
     @Autowired
     UsuarioService usuarioService;
 
+    @Autowired
+    ManagerUserSession managerUserSession;
+
+    // Solo continúa si hay un usuario logeado y es administrador
+    private void comprobarAdministrador() {
+        Long idLogeado = managerUserSession.usuarioLogeado();
+        if (idLogeado == null) {
+            throw new UsuarioNoLogeadoException();
+        }
+        UsuarioData usuario = usuarioService.findById(idLogeado);
+        if (usuario == null || !usuario.isAdministrador()) {
+            throw new UsuarioNoAutorizadoException();
+        }
+    }
+
     @GetMapping("/registrados")
     public String listadoUsuarios(Model model) {
+        comprobarAdministrador();
         model.addAttribute("usuarios", usuarioService.allUsuarios());
         return "listaUsuarios";
     }
 
     @GetMapping("/registrados/{id}")
     public String descripcionUsuario(@PathVariable(value = "id") Long idUsuario, Model model) {
+        comprobarAdministrador();
         UsuarioData usuario = usuarioService.findById(idUsuario);
         if (usuario == null) {
             throw new UsuarioNotFoundException();
