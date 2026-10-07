@@ -111,6 +111,16 @@ public class Usuario implements Serializable {
         return email.equals(usuario.email);
     }
 
+    private boolean administrador;
+
+    public boolean isAdministrador() {
+        return administrador;
+    }
+
+    public void setAdministrador(boolean administrador) {
+        this.administrador = administrador;
+    }
+
     @Override
     public int hashCode() {
         // Generamos un hash basado en los campos obligatorios
