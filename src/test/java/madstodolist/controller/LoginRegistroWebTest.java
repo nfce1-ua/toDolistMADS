@@ -55,4 +55,15 @@ public class LoginRegistroWebTest {
                 .andExpect(status().is3xxRedirection())
                 .andExpect(redirectedUrl("/registrados"));
     }
+
+    @Test
+    public void loginUsuarioBloqueadoMuestraError() throws Exception {
+        when(usuarioService.login("ana@ua", "123"))
+                .thenReturn(UsuarioService.LoginStatus.USER_BLOCKED);
+
+        this.mockMvc.perform(post("/login")
+                        .param("eMail", "ana@ua")
+                        .param("password", "123"))
+                .andExpect(content().string(containsString("Usuario bloqueado")));
+    }
 }
