@@ -1,0 +1,16 @@
+name: Developer tests
+
+on: push
+
+jobs:
+  launch-tests:
+    runs-on: ubuntu-latest
+    # Todos los pasos se ejecutan en este contenedor (Java 8 actualizado, base Ubuntu)
+    container: eclipse-temurin:8-jdk
+
+    steps:
+      - uses: actions/checkout@v4
+      - name: Permisos de mvnw
+        run: chmod +x mvnw
+      - name: Launch tests with Maven
+        run: ./mvnw test
