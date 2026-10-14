@@ -10,8 +10,13 @@ jobs:
     container: eclipse-temurin:8-jdk-alpine
 
     steps:
-      # Hacemos un checkout del código del repositorio
-      - uses: actions/checkout@v2
-      # Y lanzamos los tests
+      - uses: actions/checkout@v4
+      - name: Configurar Java 8
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '8'
+      - name: Permisos de mvnw
+        run: chmod +x mvnw
       - name: Launch tests with Maven
-        run:  ./mvnw test
+        run: ./mvnw test
