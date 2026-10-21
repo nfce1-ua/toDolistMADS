@@ -30,6 +30,9 @@ public class Usuario implements Serializable {
     @OneToMany(mappedBy = "usuario")
     Set<Tarea> tareas = new HashSet<>();
 
+    @ManyToMany(mappedBy = "usuarios")
+    Set<Equipo> equipos = new HashSet<>();
+
     // Constructor vacío necesario para JPA/Hibernate.
     // No debe usarse desde la aplicación.
     public Usuario() {}
@@ -119,6 +122,10 @@ public class Usuario implements Serializable {
 
     public void setAdministrador(boolean administrador) {
         this.administrador = administrador;
+    }
+
+    public Set<Equipo> getEquipos() {
+        return equipos;
     }
 
     private boolean bloqueado;
