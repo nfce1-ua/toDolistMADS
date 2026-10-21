@@ -17,6 +17,7 @@ public class EquipoServiceTest {
 
     @Autowired
     EquipoService equipoService;
+    @Autowired
     private UsuarioService usuarioService;
 
     @Test
