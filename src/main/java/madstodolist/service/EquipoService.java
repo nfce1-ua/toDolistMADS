@@ -8,6 +8,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.List;
+
 @Service
 public class EquipoService {
 
@@ -31,5 +33,12 @@ public class EquipoService {
             throw new RuntimeException("Equipo " + id + " no existe");
         }
         return modelMapper.map(equipo, EquipoData.class);
+    }
+
+    public List<EquipoData> findAllOrdenadoPorNombre() {
+        return equipoRepository.findAll().stream()
+                .sorted((e1, e2) -> e1.getNombre().compareTo(e2.getNombre()))
+                .map(equipo -> modelMapper.map(equipo, EquipoData.class))
+                .collect(java.util.stream.Collectors.toList());
     }
 }
