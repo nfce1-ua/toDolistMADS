@@ -62,4 +62,13 @@ public class EquipoService {
                 .map(usuario -> modelMapper.map(usuario, UsuarioData.class))
                 .collect(Collectors.toList());
     }
+
+    @Transactional(readOnly = true)
+    public List<EquipoData> equiposUsuario(Long id) {
+        Usuario usuario = usuarioRepository.findById(id).orElse(null);
+        // Hacemos uso de Java Stream API para mapear la lista de entidades a DTOs.
+        return usuario.getEquipos().stream()
+                .map(equipo -> modelMapper.map(equipo, EquipoData.class))
+                .collect(Collectors.toList());
+    }
 }
