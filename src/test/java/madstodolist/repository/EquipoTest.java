@@ -1,6 +1,9 @@
 package madstodolist.repository;
+import madstodolist.dto.EquipoData;
+import madstodolist.dto.UsuarioData;
 import madstodolist.model.Equipo;
 import madstodolist.model.Usuario;
+import madstodolist.service.EquipoServiceException;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.jdbc.Sql;
@@ -10,6 +13,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.AssertionsForClassTypes.assertThatThrownBy;
 
 @SpringBootTest
 @Sql(scripts = "/clean-db.sql")

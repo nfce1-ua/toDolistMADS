@@ -95,6 +95,10 @@ public class EquipoService {
         if (usuario == null) {
             throw new EquipoServiceException("Usuario " + idUsuario + " no existe");
         }
+        if (!equipo.getUsuarios().contains(usuario)) {
+            throw new EquipoServiceException("El usuario " + idUsuario
+                    + " no pertenece al equipo " + idEquipo);
+        }
         equipo.removeUsuario(usuario);
     }
 }
