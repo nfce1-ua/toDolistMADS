@@ -191,4 +191,27 @@ public class EquipoServiceTest {
         assertThatThrownBy(() -> equipoService.añadirUsuarioAEquipo(idEquipo, idUsuario))
                 .isInstanceOf(EquipoServiceException.class);
     }
+
+    @Test
+    public void usuarioPerteneceAEquipo() {
+        // GIVEN
+        // Un usuario y un equipo, sin relación
+        UsuarioData usuario = new UsuarioData();
+        usuario.setEmail("user@ua");
+        usuario.setPassword("123");
+        usuario = usuarioService.registrar(usuario);
+        EquipoData equipo = equipoService.crearEquipo("Proyecto 1");
+
+        // THEN
+        // Todavía no pertenece
+        assertThat(equipoService.usuarioPerteneceAEquipo(equipo.getId(), usuario.getId())).isFalse();
+
+        // WHEN
+        // Lo añadimos al equipo
+        equipoService.añadirUsuarioAEquipo(equipo.getId(), usuario.getId());
+
+        // THEN
+        // Ahora sí pertenece
+        assertThat(equipoService.usuarioPerteneceAEquipo(equipo.getId(), usuario.getId())).isTrue();
+    }
 }

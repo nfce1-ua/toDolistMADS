@@ -23,10 +23,12 @@ public class EquipoController {
     @Autowired
     ManagerUserSession managerUserSession;
 
-    private void comprobarUsuarioLogeado() {
-        if (managerUserSession.usuarioLogeado() == null) {
+    private Long comprobarUsuarioLogeado() {
+        Long idLogeado = managerUserSession.usuarioLogeado();
+        if (idLogeado == null) {
             throw new UsuarioNoLogeadoException();
         }
+        return idLogeado;
     }
 
     @GetMapping("/equipos")
@@ -38,10 +40,11 @@ public class EquipoController {
 
     @GetMapping("/equipos/{id}")
     public String miembrosEquipo(@PathVariable(value = "id") Long idEquipo, Model model) {
-        comprobarUsuarioLogeado();
+        Long idLogeado = comprobarUsuarioLogeado();
         try {
             model.addAttribute("equipo", equipoService.recuperarEquipo(idEquipo));
             model.addAttribute("usuarios", equipoService.usuariosEquipo(idEquipo));
+            model.addAttribute("pertenece", equipoService.usuarioPerteneceAEquipo(idEquipo, idLogeado));
         } catch (EquipoServiceException e) {
             throw new EquipoNotFoundException();
         }
@@ -66,5 +69,28 @@ public class EquipoController {
         }
         flash.addFlashAttribute("mensaje", "Equipo creado correctamente");
         return "redirect:/equipos";
+    }
+    @PostMapping("/equipos/{id}/unirse")
+    public String unirse(@PathVariable(value = "id") Long idEquipo, RedirectAttributes flash) {
+        Long idLogeado = comprobarUsuarioLogeado();
+        try {
+            equipoService.añadirUsuarioAEquipo(idEquipo, idLogeado);
+            flash.addFlashAttribute("mensaje", "Te has unido al equipo");
+        } catch (EquipoServiceException e) {
+            flash.addFlashAttribute("error", e.getMessage());
+        }
+        return "redirect:/equipos/" + idEquipo;
+    }
+
+    @PostMapping("/equipos/{id}/salir")
+    public String salir(@PathVariable(value = "id") Long idEquipo, RedirectAttributes flash) {
+        Long idLogeado = comprobarUsuarioLogeado();
+        try {
+            equipoService.eliminarUsuarioDeEquipo(idEquipo, idLogeado);
+            flash.addFlashAttribute("mensaje", "Has salido del equipo");
+        } catch (EquipoServiceException e) {
+            flash.addFlashAttribute("error", e.getMessage());
+        }
+        return "redirect:/equipos/" + idEquipo;
     }
 }
