@@ -12,6 +12,9 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.test.web.servlet.MockMvc;
 
+import static org.hamcrest.Matchers.not;
+import static org.mockito.Mockito.doThrow;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.flash;
 import java.util.Arrays;
 
 import static org.hamcrest.Matchers.allOf;
@@ -129,6 +132,75 @@ public class EquipoWebTest {
         when(managerUserSession.usuarioLogeado()).thenReturn(null);
 
         this.mockMvc.perform(post("/equipos/nuevo").param("nombre", "Proyecto X"))
+                .andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    public void paginaEquipoMuestraUnirmeSiNoPertenece() throws Exception {
+        when(managerUserSession.usuarioLogeado()).thenReturn(1L);
+        when(equipoService.recuperarEquipo(5L)).thenReturn(equipo(5L, "Proyecto AAA"));
+        when(equipoService.usuariosEquipo(5L)).thenReturn(Arrays.asList());
+        when(equipoService.usuarioPerteneceAEquipo(5L, 1L)).thenReturn(false);
+
+        this.mockMvc.perform(get("/equipos/5"))
+                .andExpect(content().string(allOf(
+                        containsString("/equipos/5/unirse"),
+                        not(containsString("/equipos/5/salir")))));
+    }
+
+    @Test
+    public void paginaEquipoMuestraSalirSiPertenece() throws Exception {
+        when(managerUserSession.usuarioLogeado()).thenReturn(1L);
+        when(equipoService.recuperarEquipo(5L)).thenReturn(equipo(5L, "Proyecto AAA"));
+        when(equipoService.usuariosEquipo(5L)).thenReturn(Arrays.asList());
+        when(equipoService.usuarioPerteneceAEquipo(5L, 1L)).thenReturn(true);
+
+        this.mockMvc.perform(get("/equipos/5"))
+                .andExpect(content().string(allOf(
+                        containsString("/equipos/5/salir"),
+                        not(containsString("/equipos/5/unirse")))));
+    }
+
+    @Test
+    public void postUnirseAñadeUsuarioYRedirige() throws Exception {
+        when(managerUserSession.usuarioLogeado()).thenReturn(1L);
+
+        this.mockMvc.perform(post("/equipos/5/unirse"))
+                .andExpect(status().is3xxRedirection())
+                .andExpect(redirectedUrl("/equipos/5"));
+
+        verify(equipoService).añadirUsuarioAEquipo(5L, 1L);
+    }
+
+    @Test
+    public void postSalirEliminaUsuarioYRedirige() throws Exception {
+        when(managerUserSession.usuarioLogeado()).thenReturn(1L);
+
+        this.mockMvc.perform(post("/equipos/5/salir"))
+                .andExpect(status().is3xxRedirection())
+                .andExpect(redirectedUrl("/equipos/5"));
+
+        verify(equipoService).eliminarUsuarioDeEquipo(5L, 1L);
+    }
+
+    @Test
+    public void postUnirseSiYaPerteneceMuestraError() throws Exception {
+        when(managerUserSession.usuarioLogeado()).thenReturn(1L);
+        doThrow(new EquipoServiceException("El usuario 1 ya pertenece al equipo 5"))
+                .when(equipoService).añadirUsuarioAEquipo(5L, 1L);
+
+        this.mockMvc.perform(post("/equipos/5/unirse"))
+                .andExpect(status().is3xxRedirection())
+                .andExpect(flash().attribute("error", "El usuario 1 ya pertenece al equipo 5"));
+    }
+
+    @Test
+    public void unirseYSalirSinLoginDevuelveNoAutorizado() throws Exception {
+        when(managerUserSession.usuarioLogeado()).thenReturn(null);
+
+        this.mockMvc.perform(post("/equipos/5/unirse"))
+                .andExpect(status().isUnauthorized());
+        this.mockMvc.perform(post("/equipos/5/salir"))
                 .andExpect(status().isUnauthorized());
     }
 }
