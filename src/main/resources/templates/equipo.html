@@ -1,0 +1,11 @@
+@GetMapping("/equipos/{id}")
+public String miembrosEquipo(@PathVariable(value = "id") Long idEquipo, Model model) {
+comprobarUsuarioLogeado();
+try {
+model.addAttribute("equipo", equipoService.recuperarEquipo(idEquipo));
+model.addAttribute("usuarios", equipoService.usuariosEquipo(idEquipo));
+} catch (EquipoServiceException e) {
+throw new EquipoNotFoundException();
+}
+return "equipo";
+}
