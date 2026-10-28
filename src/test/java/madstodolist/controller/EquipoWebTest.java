@@ -5,6 +5,7 @@ import madstodolist.dto.EquipoData;
 import madstodolist.dto.UsuarioData;
 import madstodolist.service.EquipoService;
 import madstodolist.service.EquipoServiceException;
+import madstodolist.service.UsuarioService;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
@@ -201,6 +202,81 @@ public class EquipoWebTest {
         this.mockMvc.perform(post("/equipos/5/unirse"))
                 .andExpect(status().isUnauthorized());
         this.mockMvc.perform(post("/equipos/5/salir"))
+                .andExpect(status().isUnauthorized());
+    }
+
+    @MockBean
+    private UsuarioService usuarioService;
+
+    // Simula un usuario logeado, administrador o no
+    private void logearComo(Long id, boolean administrador) {
+        UsuarioData usuario = new UsuarioData();
+        usuario.setId(id);
+        usuario.setAdministrador(administrador);
+        when(managerUserSession.usuarioLogeado()).thenReturn(id);
+        when(usuarioService.findById(id)).thenReturn(usuario);
+    }
+    @Test
+    public void adminVeFormularioEditarConNombreActual() throws Exception {
+        logearComo(99L, true);
+        when(equipoService.recuperarEquipo(5L)).thenReturn(equipo(5L, "Proyecto AAA"));
+
+        this.mockMvc.perform(get("/equipos/5/editar"))
+                .andExpect(content().string(allOf(
+                        containsString("action=\"/equipos/5/editar\""),
+                        containsString("Proyecto AAA"))));
+    }
+
+    @Test
+    public void adminEditaEquipoYRedirige() throws Exception {
+        logearComo(99L, true);
+
+        this.mockMvc.perform(post("/equipos/5/editar").param("nombre", "Proyecto Nuevo"))
+                .andExpect(status().is3xxRedirection())
+                .andExpect(redirectedUrl("/equipos/5"));
+
+        verify(equipoService).renombrarEquipo(5L, "Proyecto Nuevo");
+    }
+
+    @Test
+    public void adminEditaConNombreVacioVuelveAlFormularioConError() throws Exception {
+        logearComo(99L, true);
+        when(equipoService.renombrarEquipo(5L, ""))
+                .thenThrow(new EquipoServiceException("El nombre del equipo no puede estar vacío"));
+
+        this.mockMvc.perform(post("/equipos/5/editar").param("nombre", ""))
+                .andExpect(status().is3xxRedirection())
+                .andExpect(redirectedUrl("/equipos/5/editar"))
+                .andExpect(flash().attribute("error", "El nombre del equipo no puede estar vacío"));
+    }
+
+    @Test
+    public void editarEquipoInexistenteDevuelve404() throws Exception {
+        logearComo(99L, true);
+        when(equipoService.recuperarEquipo(50L))
+                .thenThrow(new EquipoServiceException("Equipo 50 no existe"));
+
+        this.mockMvc.perform(get("/equipos/50/editar"))
+                .andExpect(status().isNotFound());
+    }
+
+    @Test
+    public void usuarioNormalNoPuedeEditarEquipo() throws Exception {
+        logearComo(5L, false);
+
+        this.mockMvc.perform(get("/equipos/5/editar"))
+                .andExpect(status().isUnauthorized());
+        this.mockMvc.perform(post("/equipos/5/editar").param("nombre", "X"))
+                .andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    public void sinLoginNoPuedeEditarEquipo() throws Exception {
+        when(managerUserSession.usuarioLogeado()).thenReturn(null);
+
+        this.mockMvc.perform(get("/equipos/5/editar"))
+                .andExpect(status().isUnauthorized());
+        this.mockMvc.perform(post("/equipos/5/editar").param("nombre", "X"))
                 .andExpect(status().isUnauthorized());
     }
 }
