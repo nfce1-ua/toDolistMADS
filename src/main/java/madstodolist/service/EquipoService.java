@@ -135,6 +135,9 @@ public class EquipoService {
     @Transactional
     public EquipoData renombrarEquipo(Long id, String nombre) {
         Equipo equipo = buscarEquipo(id);
+        if (nombre == null || nombre.trim().isEmpty()) {
+            throw new EquipoServiceException("El nombre del equipo no puede estar vacío");
+        }
         equipo.setNombre(nombre);
         return modelMapper.map(equipo, EquipoData.class);
     }

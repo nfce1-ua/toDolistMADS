@@ -230,4 +230,18 @@ public class EquipoServiceTest {
         assertThat(equipoService.recuperarEquipo(equipo.getId()).getNombre())
                 .isEqualTo("Proyecto 2");
     }
+    @Test
+    public void renombrarEquipoLanzaExcepciones() {
+        // Equipo inexistente
+        assertThatThrownBy(() -> equipoService.renombrarEquipo(999L, "Proyecto 2"))
+                .isInstanceOf(EquipoServiceException.class);
+
+        // Nombre vacío o nulo en un equipo existente
+        EquipoData equipo = equipoService.crearEquipo("Proyecto 1");
+        Long idEquipo = equipo.getId();
+        assertThatThrownBy(() -> equipoService.renombrarEquipo(idEquipo, ""))
+                .isInstanceOf(EquipoServiceException.class);
+        assertThatThrownBy(() -> equipoService.renombrarEquipo(idEquipo, null))
+                .isInstanceOf(EquipoServiceException.class);
+    }
 }
