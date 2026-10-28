@@ -1,11 +1,32 @@
-@GetMapping("/equipos/{id}")
-public String miembrosEquipo(@PathVariable(value = "id") Long idEquipo, Model model) {
-comprobarUsuarioLogeado();
-try {
-model.addAttribute("equipo", equipoService.recuperarEquipo(idEquipo));
-model.addAttribute("usuarios", equipoService.usuariosEquipo(idEquipo));
-} catch (EquipoServiceException e) {
-throw new EquipoNotFoundException();
-}
-return "equipo";
-}
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+
+<head th:replace="fragments :: head (titulo='Equipo')"></head>
+
+<body>
+<div th:replace="fragments :: navbar"></div>
+<div class="container-fluid">
+  <div class="row mt-3">
+    <div class="col"><h2 th:text="'Equipo ' + ${equipo.nombre}"></h2></div>
+  </div>
+  <div class="row mt-3">
+    <div class="col">
+      <table class="table table-striped">
+        <thead>
+        <tr><th>Id</th><th>Email</th><th>Nombre</th></tr>
+        </thead>
+        <tbody>
+        <tr th:each="u : ${usuarios}">
+          <td th:text="${u.id}"></td>
+          <td th:text="${u.email}"></td>
+          <td th:text="${u.nombre}"></td>
+        </tr>
+        </tbody>
+      </table>
+      <a class="btn btn-link" th:href="@{/equipos}">Volver a equipos</a>
+    </div>
+  </div>
+</div>
+<div th:replace="fragments::javascript"/>
+</body>
+</html>

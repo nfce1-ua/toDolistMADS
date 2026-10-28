@@ -2,7 +2,9 @@ package madstodolist.controller;
 
 import madstodolist.authentication.ManagerUserSession;
 import madstodolist.dto.EquipoData;
+import madstodolist.dto.UsuarioData;
 import madstodolist.service.EquipoService;
+import madstodolist.service.EquipoServiceException;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
@@ -56,6 +58,39 @@ public class EquipoWebTest {
         when(managerUserSession.usuarioLogeado()).thenReturn(null);
 
         this.mockMvc.perform(get("/equipos"))
+                .andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    public void miembrosEquipoMuestraUsuarios() throws Exception {
+        when(managerUserSession.usuarioLogeado()).thenReturn(1L);
+        UsuarioData ana = new UsuarioData();
+        ana.setId(1L);
+        ana.setEmail("ana@ua");
+        when(equipoService.recuperarEquipo(5L)).thenReturn(equipo(5L, "Proyecto AAA"));
+        when(equipoService.usuariosEquipo(5L)).thenReturn(Arrays.asList(ana));
+
+        this.mockMvc.perform(get("/equipos/5"))
+                .andExpect(content().string(allOf(
+                        containsString("Proyecto AAA"),
+                        containsString("ana@ua"))));
+    }
+
+    @Test
+    public void miembrosEquipoInexistenteDevuelve404() throws Exception {
+        when(managerUserSession.usuarioLogeado()).thenReturn(1L);
+        when(equipoService.recuperarEquipo(50L))
+                .thenThrow(new EquipoServiceException("Equipo 50 no existe"));
+
+        this.mockMvc.perform(get("/equipos/50"))
+                .andExpect(status().isNotFound());
+    }
+
+    @Test
+    public void miembrosEquipoSinLoginDevuelveNoAutorizado() throws Exception {
+        when(managerUserSession.usuarioLogeado()).thenReturn(null);
+
+        this.mockMvc.perform(get("/equipos/5"))
                 .andExpect(status().isUnauthorized());
     }
 }
