@@ -131,4 +131,11 @@ public class EquipoService {
         Usuario usuario = buscarUsuario(idUsuario);
         return equipo.getUsuarios().contains(usuario);
     }
+
+    @Transactional
+    public EquipoData renombrarEquipo(Long id, String nombre) {
+        Equipo equipo = buscarEquipo(id);
+        equipo.setNombre(nombre);
+        return modelMapper.map(equipo, EquipoData.class);
+    }
 }

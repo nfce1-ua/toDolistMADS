@@ -214,4 +214,20 @@ public class EquipoServiceTest {
         // Ahora sí pertenece
         assertThat(equipoService.usuarioPerteneceAEquipo(equipo.getId(), usuario.getId())).isTrue();
     }
+    @Test
+    public void renombrarEquipo() {
+        // GIVEN
+        // Un equipo en la base de datos
+        EquipoData equipo = equipoService.crearEquipo("Proyecto 1");
+
+        // WHEN
+        // Lo renombramos
+        EquipoData renombrado = equipoService.renombrarEquipo(equipo.getId(), "Proyecto 2");
+
+        // THEN
+        // Se devuelve el equipo con el nuevo nombre y queda guardado en la BD
+        assertThat(renombrado.getNombre()).isEqualTo("Proyecto 2");
+        assertThat(equipoService.recuperarEquipo(equipo.getId()).getNombre())
+                .isEqualTo("Proyecto 2");
+    }
 }
