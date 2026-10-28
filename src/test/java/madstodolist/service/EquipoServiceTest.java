@@ -268,4 +268,10 @@ public class EquipoServiceTest {
         assertThat(usuarioService.findById(usuario.getId())).isNotNull();
         assertThat(equipoService.equiposUsuario(usuario.getId())).isEmpty();
     }
+
+    @Test
+    public void eliminarEquipoInexistenteLanzaExcepcion() {
+        assertThatThrownBy(() -> equipoService.eliminarEquipo(999L))
+                .isInstanceOf(EquipoServiceException.class);
+    }
 }

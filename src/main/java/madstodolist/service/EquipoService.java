@@ -145,6 +145,6 @@ public class EquipoService {
     }
     @Transactional
     public void eliminarEquipo(Long id) {
-        equipoRepository.deleteById(id);
+        equipoRepository.delete(buscarEquipo(id));
     }
 }
