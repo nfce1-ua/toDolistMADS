@@ -30,6 +30,9 @@
                 <a class="nav-link"
                    th:href="@{/usuarios/{id}/tareas(id=${usuarioLogeado.id})}">Tareas</a>
             </li>
+            <li class="nav-item" th:if="${usuarioLogeado != null}">
+                <a class="nav-link" th:href="@{/equipos}">Equipos</a>
+            </li>
         </ul>
 
         <!-- Lado derecho: usuario logeado -->
