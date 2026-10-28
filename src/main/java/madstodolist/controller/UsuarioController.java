@@ -25,9 +25,6 @@ public class UsuarioController {
     // Solo continúa si hay un usuario logeado y es administrador
     private void comprobarAdministrador() {
         Long idLogeado = managerUserSession.usuarioLogeado();
-        if (idLogeado == null) {
-            throw new UsuarioNoLogeadoException();
-        }
         UsuarioData usuario = usuarioService.findById(idLogeado);
         if (usuario == null || !usuario.isAdministrador()) {
             throw new UsuarioNoAutorizadoException();

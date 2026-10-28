@@ -5,6 +5,7 @@ import madstodolist.dto.EquipoData;
 import madstodolist.dto.UsuarioData;
 import madstodolist.service.EquipoService;
 import madstodolist.service.EquipoServiceException;
+import madstodolist.service.UsuarioService;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
@@ -13,14 +14,12 @@ import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.test.web.servlet.MockMvc;
 
 import static org.hamcrest.Matchers.not;
-import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.flash;
 import java.util.Arrays;
 
 import static org.hamcrest.Matchers.allOf;
 import static org.hamcrest.Matchers.containsString;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
@@ -202,5 +201,136 @@ public class EquipoWebTest {
                 .andExpect(status().isUnauthorized());
         this.mockMvc.perform(post("/equipos/5/salir"))
                 .andExpect(status().isUnauthorized());
+    }
+
+    @MockBean
+    private UsuarioService usuarioService;
+
+    // Simula un usuario logeado, administrador o no
+    private void logearComo(Long id, boolean administrador) {
+        UsuarioData usuario = new UsuarioData();
+        usuario.setId(id);
+        usuario.setAdministrador(administrador);
+        when(managerUserSession.usuarioLogeado()).thenReturn(id);
+        when(usuarioService.findById(id)).thenReturn(usuario);
+    }
+    @Test
+    public void adminVeFormularioEditarConNombreActual() throws Exception {
+        logearComo(99L, true);
+        when(equipoService.recuperarEquipo(5L)).thenReturn(equipo(5L, "Proyecto AAA"));
+
+        this.mockMvc.perform(get("/equipos/5/editar"))
+                .andExpect(content().string(allOf(
+                        containsString("action=\"/equipos/5/editar\""),
+                        containsString("Proyecto AAA"))));
+    }
+
+    @Test
+    public void adminEditaEquipoYRedirige() throws Exception {
+        logearComo(99L, true);
+
+        this.mockMvc.perform(post("/equipos/5/editar").param("nombre", "Proyecto Nuevo"))
+                .andExpect(status().is3xxRedirection())
+                .andExpect(redirectedUrl("/equipos/5"));
+
+        verify(equipoService).renombrarEquipo(5L, "Proyecto Nuevo");
+    }
+
+    @Test
+    public void adminEditaConNombreVacioVuelveAlFormularioConError() throws Exception {
+        logearComo(99L, true);
+        when(equipoService.renombrarEquipo(5L, ""))
+                .thenThrow(new EquipoServiceException("El nombre del equipo no puede estar vacío"));
+
+        this.mockMvc.perform(post("/equipos/5/editar").param("nombre", ""))
+                .andExpect(status().is3xxRedirection())
+                .andExpect(redirectedUrl("/equipos/5/editar"))
+                .andExpect(flash().attribute("error", "El nombre del equipo no puede estar vacío"));
+    }
+
+    @Test
+    public void editarEquipoInexistenteDevuelve404() throws Exception {
+        logearComo(99L, true);
+        when(equipoService.recuperarEquipo(50L))
+                .thenThrow(new EquipoServiceException("Equipo 50 no existe"));
+
+        this.mockMvc.perform(get("/equipos/50/editar"))
+                .andExpect(status().isNotFound());
+    }
+
+    @Test
+    public void usuarioNormalNoPuedeEditarEquipo() throws Exception {
+        logearComo(5L, false);
+
+        this.mockMvc.perform(get("/equipos/5/editar"))
+                .andExpect(status().isUnauthorized());
+        this.mockMvc.perform(post("/equipos/5/editar").param("nombre", "X"))
+                .andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    public void sinLoginNoPuedeEditarEquipo() throws Exception {
+        when(managerUserSession.usuarioLogeado()).thenReturn(null);
+
+        this.mockMvc.perform(get("/equipos/5/editar"))
+                .andExpect(status().isUnauthorized());
+        this.mockMvc.perform(post("/equipos/5/editar").param("nombre", "X"))
+                .andExpect(status().isUnauthorized());
+    }
+    @Test
+    public void adminEliminaEquipoYRedirigeAlListado() throws Exception {
+        logearComo(99L, true);
+
+        this.mockMvc.perform(post("/equipos/5/eliminar"))
+                .andExpect(status().is3xxRedirection())
+                .andExpect(redirectedUrl("/equipos"));
+
+        verify(equipoService).eliminarEquipo(5L);
+    }
+
+    @Test
+    public void eliminarEquipoInexistenteMuestraError() throws Exception {
+        logearComo(99L, true);
+        doThrow(new EquipoServiceException("Equipo 50 no existe"))
+                .when(equipoService).eliminarEquipo(50L);
+
+        this.mockMvc.perform(post("/equipos/50/eliminar"))
+                .andExpect(status().is3xxRedirection())
+                .andExpect(flash().attribute("error", "Equipo 50 no existe"));
+    }
+
+    @Test
+    public void usuarioNormalNoPuedeEliminarEquipo() throws Exception {
+        logearComo(5L, false);
+
+        this.mockMvc.perform(post("/equipos/5/eliminar"))
+                .andExpect(status().isUnauthorized());
+
+        verify(equipoService, never()).eliminarEquipo(5L);
+    }
+
+    @Test
+    public void sinLoginNoPuedeEliminarEquipo() throws Exception {
+        when(managerUserSession.usuarioLogeado()).thenReturn(null);
+
+        this.mockMvc.perform(post("/equipos/5/eliminar"))
+                .andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    public void soloElAdminVeLosBotonesEditarYEliminar() throws Exception {
+        when(equipoService.recuperarEquipo(5L)).thenReturn(equipo(5L, "Proyecto AAA"));
+
+        logearComo(99L, true);
+        this.mockMvc.perform(get("/equipos/5"))
+                .andExpect(content().string(allOf(
+                        containsString("/equipos/5/editar"),
+                        containsString("/equipos/5/eliminar"))));
+
+        logearComo(5L, false);
+        this.mockMvc.perform(get("/equipos/5"))
+                .andExpect(content().string(allOf(
+                        not(containsString("/equipos/5/editar")),
+                        not(containsString("/equipos/5/eliminar")))));
     }
 }
