@@ -122,4 +122,22 @@ public class EquipoTest {
         // THEN
         assertThat(equipos).hasSize(2);
     }
+
+    @Test
+    public void eliminarUsuarioDeEquipoActualizaAmbosLados() {
+        // GIVEN
+        // Un equipo con un usuario, en memoria
+        Equipo equipo = new Equipo("Proyecto 1");
+        Usuario usuario = new Usuario("user@ua");
+        equipo.addUsuario(usuario);
+
+        // WHEN
+        // Eliminamos el usuario del equipo
+        equipo.removeUsuario(usuario);
+
+        // THEN
+        // Se actualizan las dos colecciones
+        assertThat(equipo.getUsuarios()).isEmpty();
+        assertThat(usuario.getEquipos()).isEmpty();
+    }
 }
