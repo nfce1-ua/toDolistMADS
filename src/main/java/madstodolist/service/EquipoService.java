@@ -62,6 +62,10 @@ public class EquipoService {
         if (usuario == null) {
             throw new EquipoServiceException("Usuario " + id1 + " no existe");
         }
+        if (equipo.getUsuarios().contains(usuario)) {
+            throw new EquipoServiceException("El usuario " + id1
+                    + " ya pertenece al equipo " + id);
+        }
         equipo.addUsuario(usuario);
     }
 

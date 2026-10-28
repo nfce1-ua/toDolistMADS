@@ -172,4 +172,23 @@ public class EquipoServiceTest {
         assertThatThrownBy(() -> equipoService.crearEquipo(null))
                 .isInstanceOf(EquipoServiceException.class);
     }
+
+    @Test
+    public void añadirUsuarioYaPertenecienteLanzaExcepcion() {
+        // GIVEN
+        // Un usuario que ya pertenece a un equipo
+        UsuarioData usuario = new UsuarioData();
+        usuario.setEmail("user@ua");
+        usuario.setPassword("123");
+        usuario = usuarioService.registrar(usuario);
+        EquipoData equipo = equipoService.crearEquipo("Proyecto 1");
+        equipoService.añadirUsuarioAEquipo(equipo.getId(), usuario.getId());
+
+        // WHEN, THEN
+        // Añadirlo de nuevo lanza una excepción
+        Long idEquipo = equipo.getId();
+        Long idUsuario = usuario.getId();
+        assertThatThrownBy(() -> equipoService.añadirUsuarioAEquipo(idEquipo, idUsuario))
+                .isInstanceOf(EquipoServiceException.class);
+    }
 }
