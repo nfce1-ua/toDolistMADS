@@ -16,10 +16,11 @@ import java.util.Arrays;
 
 import static org.hamcrest.Matchers.allOf;
 import static org.hamcrest.Matchers.containsString;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @SpringBootTest
 @AutoConfigureMockMvc
@@ -91,6 +92,43 @@ public class EquipoWebTest {
         when(managerUserSession.usuarioLogeado()).thenReturn(null);
 
         this.mockMvc.perform(get("/equipos/5"))
+                .andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    public void getNuevoEquipoDevuelveFormulario() throws Exception {
+        when(managerUserSession.usuarioLogeado()).thenReturn(1L);
+
+        this.mockMvc.perform(get("/equipos/nuevo"))
+                .andExpect(content().string(containsString("action=\"/equipos/nuevo\"")));
+    }
+
+    @Test
+    public void postNuevoEquipoRedirigeAlListado() throws Exception {
+        when(managerUserSession.usuarioLogeado()).thenReturn(1L);
+
+        this.mockMvc.perform(post("/equipos/nuevo").param("nombre", "Proyecto X"))
+                .andExpect(status().is3xxRedirection())
+                .andExpect(redirectedUrl("/equipos"));
+
+        verify(equipoService).crearEquipo("Proyecto X");
+    }
+
+    @Test
+    public void postNuevoEquipoVacioMuestraError() throws Exception {
+        when(managerUserSession.usuarioLogeado()).thenReturn(1L);
+        when(equipoService.crearEquipo(""))
+                .thenThrow(new EquipoServiceException("El nombre del equipo no puede estar vacío"));
+
+        this.mockMvc.perform(post("/equipos/nuevo").param("nombre", ""))
+                .andExpect(content().string(containsString("El nombre del equipo no puede estar vacío")));
+    }
+
+    @Test
+    public void nuevoEquipoSinLoginDevuelveNoAutorizado() throws Exception {
+        when(managerUserSession.usuarioLogeado()).thenReturn(null);
+
+        this.mockMvc.perform(post("/equipos/nuevo").param("nombre", "Proyecto X"))
                 .andExpect(status().isUnauthorized());
     }
 }
