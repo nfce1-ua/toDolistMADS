@@ -27,9 +27,7 @@ public class EquipoService {
 
     @Transactional
     public EquipoData crearEquipo(String nombre) {
-        if (nombre == null || nombre.trim().isEmpty()) {
-            throw new EquipoServiceException("El nombre del equipo no puede estar vacío");
-        }
+        comprobarNombre(nombre);
         Equipo equipo = new Equipo(nombre);
         equipoRepository.save(equipo);
         return modelMapper.map(equipo, EquipoData.class);
@@ -135,10 +133,14 @@ public class EquipoService {
     @Transactional
     public EquipoData renombrarEquipo(Long id, String nombre) {
         Equipo equipo = buscarEquipo(id);
+        comprobarNombre(nombre);
+        equipo.setNombre(nombre);
+        return modelMapper.map(equipo, EquipoData.class);
+    }
+
+    private void comprobarNombre(String nombre) {
         if (nombre == null || nombre.trim().isEmpty()) {
             throw new EquipoServiceException("El nombre del equipo no puede estar vacío");
         }
-        equipo.setNombre(nombre);
-        return modelMapper.map(equipo, EquipoData.class);
     }
 }
