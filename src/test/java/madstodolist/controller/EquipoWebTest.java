@@ -14,14 +14,12 @@ import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.test.web.servlet.MockMvc;
 
 import static org.hamcrest.Matchers.not;
-import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.flash;
 import java.util.Arrays;
 
 import static org.hamcrest.Matchers.allOf;
 import static org.hamcrest.Matchers.containsString;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
@@ -278,5 +276,61 @@ public class EquipoWebTest {
                 .andExpect(status().isUnauthorized());
         this.mockMvc.perform(post("/equipos/5/editar").param("nombre", "X"))
                 .andExpect(status().isUnauthorized());
+    }
+    @Test
+    public void adminEliminaEquipoYRedirigeAlListado() throws Exception {
+        logearComo(99L, true);
+
+        this.mockMvc.perform(post("/equipos/5/eliminar"))
+                .andExpect(status().is3xxRedirection())
+                .andExpect(redirectedUrl("/equipos"));
+
+        verify(equipoService).eliminarEquipo(5L);
+    }
+
+    @Test
+    public void eliminarEquipoInexistenteMuestraError() throws Exception {
+        logearComo(99L, true);
+        doThrow(new EquipoServiceException("Equipo 50 no existe"))
+                .when(equipoService).eliminarEquipo(50L);
+
+        this.mockMvc.perform(post("/equipos/50/eliminar"))
+                .andExpect(status().is3xxRedirection())
+                .andExpect(flash().attribute("error", "Equipo 50 no existe"));
+    }
+
+    @Test
+    public void usuarioNormalNoPuedeEliminarEquipo() throws Exception {
+        logearComo(5L, false);
+
+        this.mockMvc.perform(post("/equipos/5/eliminar"))
+                .andExpect(status().isUnauthorized());
+
+        verify(equipoService, never()).eliminarEquipo(5L);
+    }
+
+    @Test
+    public void sinLoginNoPuedeEliminarEquipo() throws Exception {
+        when(managerUserSession.usuarioLogeado()).thenReturn(null);
+
+        this.mockMvc.perform(post("/equipos/5/eliminar"))
+                .andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    public void soloElAdminVeLosBotonesEditarYEliminar() throws Exception {
+        when(equipoService.recuperarEquipo(5L)).thenReturn(equipo(5L, "Proyecto AAA"));
+
+        logearComo(99L, true);
+        this.mockMvc.perform(get("/equipos/5"))
+                .andExpect(content().string(allOf(
+                        containsString("/equipos/5/editar"),
+                        containsString("/equipos/5/eliminar"))));
+
+        logearComo(5L, false);
+        this.mockMvc.perform(get("/equipos/5"))
+                .andExpect(content().string(allOf(
+                        not(containsString("/equipos/5/editar")),
+                        not(containsString("/equipos/5/eliminar")))));
     }
 }
