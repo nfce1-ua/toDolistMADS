@@ -37,7 +37,7 @@ public class EquipoService {
 
     @Transactional(readOnly = true)
     public EquipoData recuperarEquipo(Long id) {
-        Equipo equipo = equipoRepository.findById(id).orElse(null);
+        Equipo equipo = buscarEquipo(id);
         if (equipo == null) {
             // Cambiar a EquipoServiceException
             throw new EquipoServiceException("Equipo " + id + " no existe");
@@ -54,8 +54,8 @@ public class EquipoService {
 
     @Transactional
     public void añadirUsuarioAEquipo(Long id, Long id1) {
-        Equipo equipo = equipoRepository.findById(id).orElse(null);
-        Usuario usuario = usuarioRepository.findById(id1).orElse(null);
+        Equipo equipo = buscarEquipo(id);
+        Usuario usuario = buscarUsuario(id1);
         if (equipo == null) {
             throw new EquipoServiceException("Equipo " + id + " no existe");
         }
@@ -71,7 +71,7 @@ public class EquipoService {
 
     @Transactional(readOnly = true)
     public List<UsuarioData> usuariosEquipo(Long id) {
-        Equipo equipo = equipoRepository.findById(id).orElse(null);
+        Equipo equipo = buscarEquipo(id);
         if (equipo == null) {
             throw new EquipoServiceException("Equipo " + id + " no existe");
         }
@@ -83,7 +83,7 @@ public class EquipoService {
 
     @Transactional(readOnly = true)
     public List<EquipoData> equiposUsuario(Long id) {
-        Usuario usuario = usuarioRepository.findById(id).orElse(null);
+        Usuario usuario = buscarUsuario(id);
         if (usuario == null) {
             throw new EquipoServiceException("Usuario " + id + " no existe");
         }
@@ -94,8 +94,8 @@ public class EquipoService {
     }
     @Transactional
     public void eliminarUsuarioDeEquipo(Long idEquipo, Long idUsuario) {
-        Equipo equipo = equipoRepository.findById(idEquipo).orElse(null);
-        Usuario usuario = usuarioRepository.findById(idUsuario).orElse(null);
+        Equipo equipo = buscarEquipo(idEquipo);
+        Usuario usuario = buscarUsuario(idUsuario);
         if (equipo == null) {
             throw new EquipoServiceException("Equipo " + idEquipo + " no existe");
         }
@@ -107,5 +107,21 @@ public class EquipoService {
                     + " no pertenece al equipo " + idEquipo);
         }
         equipo.removeUsuario(usuario);
+    }
+
+    private Equipo buscarEquipo(Long id) {
+        Equipo equipo = equipoRepository.findById(id).orElse(null);
+        if (equipo == null) {
+            throw new EquipoServiceException("Equipo " + id + " no existe");
+        }
+        return equipo;
+    }
+
+    private Usuario buscarUsuario(Long id) {
+        Usuario usuario = usuarioRepository.findById(id).orElse(null);
+        if (usuario == null) {
+            throw new EquipoServiceException("Usuario " + id + " no existe");
+        }
+        return usuario;
     }
 }
