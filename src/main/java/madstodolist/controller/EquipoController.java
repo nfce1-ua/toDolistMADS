@@ -2,9 +2,12 @@ package madstodolist.controller;
 
 import madstodolist.authentication.ManagerUserSession;
 import madstodolist.controller.exception.EquipoNotFoundException;
+import madstodolist.controller.exception.UsuarioNoAutorizadoException;
 import madstodolist.controller.exception.UsuarioNoLogeadoException;
+import madstodolist.dto.UsuarioData;
 import madstodolist.service.EquipoService;
 import madstodolist.service.EquipoServiceException;
+import madstodolist.service.UsuarioService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -29,6 +32,15 @@ public class EquipoController {
             throw new UsuarioNoLogeadoException();
         }
         return idLogeado;
+    }
+
+    // Solo continúa si hay un usuario logeado y es administrador
+    private void comprobarAdministrador() {
+        Long idLogeado = comprobarUsuarioLogeado();
+        UsuarioData usuario = usuarioService.findById(idLogeado);
+        if (usuario == null || !usuario.isAdministrador()) {
+            throw new UsuarioNoAutorizadoException();
+        }
     }
 
     @GetMapping("/equipos")
@@ -91,6 +103,34 @@ public class EquipoController {
         } catch (EquipoServiceException e) {
             flash.addFlashAttribute("error", e.getMessage());
         }
+        return "redirect:/equipos/" + idEquipo;
+    }
+    @Autowired
+    UsuarioService usuarioService;
+
+    @GetMapping("/equipos/{id}/editar")
+    public String formEditarEquipo(@PathVariable(value = "id") Long idEquipo, Model model) {
+        comprobarAdministrador();
+        try {
+            model.addAttribute("equipo", equipoService.recuperarEquipo(idEquipo));
+        } catch (EquipoServiceException e) {
+            throw new EquipoNotFoundException();
+        }
+        return "formEditarEquipo";
+    }
+
+    @PostMapping("/equipos/{id}/editar")
+    public String editarEquipo(@PathVariable(value = "id") Long idEquipo,
+                               @RequestParam("nombre") String nombre,
+                               RedirectAttributes flash) {
+        comprobarAdministrador();
+        try {
+            equipoService.renombrarEquipo(idEquipo, nombre);
+        } catch (EquipoServiceException e) {
+            flash.addFlashAttribute("error", e.getMessage());
+            return "redirect:/equipos/" + idEquipo + "/editar";
+        }
+        flash.addFlashAttribute("mensaje", "Equipo modificado correctamente");
         return "redirect:/equipos/" + idEquipo;
     }
 }
