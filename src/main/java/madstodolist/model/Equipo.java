@@ -71,4 +71,9 @@ public class Equipo implements Serializable {
         // Generamos un hash basado en el nombre (o en los campos principales)
         return Objects.hash(nombre);
     }
+    public void removeUsuario(Usuario usuario) {
+        // Igual que en addUsuario, hay que actualizar ambos lados
+        this.getUsuarios().remove(usuario);
+        usuario.getEquipos().remove(this);
+    }
 }

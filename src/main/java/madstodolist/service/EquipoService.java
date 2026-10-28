@@ -27,6 +27,9 @@ public class EquipoService {
 
     @Transactional
     public EquipoData crearEquipo(String nombre) {
+        if (nombre == null || nombre.trim().isEmpty()) {
+            throw new EquipoServiceException("El nombre del equipo no puede estar vacío");
+        }
         Equipo equipo = new Equipo(nombre);
         equipoRepository.save(equipo);
         return modelMapper.map(equipo, EquipoData.class);
@@ -34,7 +37,7 @@ public class EquipoService {
 
     @Transactional(readOnly = true)
     public EquipoData recuperarEquipo(Long id) {
-        Equipo equipo = equipoRepository.findById(id).orElse(null);
+        Equipo equipo = buscarEquipo(id);
         if (equipo == null) {
             // Cambiar a EquipoServiceException
             throw new EquipoServiceException("Equipo " + id + " no existe");
@@ -51,20 +54,24 @@ public class EquipoService {
 
     @Transactional
     public void añadirUsuarioAEquipo(Long id, Long id1) {
-        Equipo equipo = equipoRepository.findById(id).orElse(null);
-        Usuario usuario = usuarioRepository.findById(id1).orElse(null);
+        Equipo equipo = buscarEquipo(id);
+        Usuario usuario = buscarUsuario(id1);
         if (equipo == null) {
             throw new EquipoServiceException("Equipo " + id + " no existe");
         }
         if (usuario == null) {
             throw new EquipoServiceException("Usuario " + id1 + " no existe");
         }
+        if (equipo.getUsuarios().contains(usuario)) {
+            throw new EquipoServiceException("El usuario " + id1
+                    + " ya pertenece al equipo " + id);
+        }
         equipo.addUsuario(usuario);
     }
 
     @Transactional(readOnly = true)
     public List<UsuarioData> usuariosEquipo(Long id) {
-        Equipo equipo = equipoRepository.findById(id).orElse(null);
+        Equipo equipo = buscarEquipo(id);
         if (equipo == null) {
             throw new EquipoServiceException("Equipo " + id + " no existe");
         }
@@ -76,7 +83,7 @@ public class EquipoService {
 
     @Transactional(readOnly = true)
     public List<EquipoData> equiposUsuario(Long id) {
-        Usuario usuario = usuarioRepository.findById(id).orElse(null);
+        Usuario usuario = buscarUsuario(id);
         if (usuario == null) {
             throw new EquipoServiceException("Usuario " + id + " no existe");
         }
@@ -84,5 +91,37 @@ public class EquipoService {
         return usuario.getEquipos().stream()
                 .map(equipo -> modelMapper.map(equipo, EquipoData.class))
                 .collect(Collectors.toList());
+    }
+    @Transactional
+    public void eliminarUsuarioDeEquipo(Long idEquipo, Long idUsuario) {
+        Equipo equipo = buscarEquipo(idEquipo);
+        Usuario usuario = buscarUsuario(idUsuario);
+        if (equipo == null) {
+            throw new EquipoServiceException("Equipo " + idEquipo + " no existe");
+        }
+        if (usuario == null) {
+            throw new EquipoServiceException("Usuario " + idUsuario + " no existe");
+        }
+        if (!equipo.getUsuarios().contains(usuario)) {
+            throw new EquipoServiceException("El usuario " + idUsuario
+                    + " no pertenece al equipo " + idEquipo);
+        }
+        equipo.removeUsuario(usuario);
+    }
+
+    private Equipo buscarEquipo(Long id) {
+        Equipo equipo = equipoRepository.findById(id).orElse(null);
+        if (equipo == null) {
+            throw new EquipoServiceException("Equipo " + id + " no existe");
+        }
+        return equipo;
+    }
+
+    private Usuario buscarUsuario(Long id) {
+        Usuario usuario = usuarioRepository.findById(id).orElse(null);
+        if (usuario == null) {
+            throw new EquipoServiceException("Usuario " + id + " no existe");
+        }
+        return usuario;
     }
 }
