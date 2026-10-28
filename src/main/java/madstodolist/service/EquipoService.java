@@ -143,4 +143,8 @@ public class EquipoService {
             throw new EquipoServiceException("El nombre del equipo no puede estar vacío");
         }
     }
+    @Transactional
+    public void eliminarEquipo(Long id) {
+        equipoRepository.deleteById(id);
+    }
 }

@@ -244,4 +244,28 @@ public class EquipoServiceTest {
         assertThatThrownBy(() -> equipoService.renombrarEquipo(idEquipo, null))
                 .isInstanceOf(EquipoServiceException.class);
     }
+    @Test
+    public void eliminarEquipo() {
+        // GIVEN
+        // Un equipo con un usuario
+        UsuarioData usuario = new UsuarioData();
+        usuario.setEmail("user@ua");
+        usuario.setPassword("123");
+        usuario = usuarioService.registrar(usuario);
+        EquipoData equipo = equipoService.crearEquipo("Proyecto 1");
+        equipoService.añadirUsuarioAEquipo(equipo.getId(), usuario.getId());
+
+        // WHEN
+        // Eliminamos el equipo
+        equipoService.eliminarEquipo(equipo.getId());
+
+        // THEN
+        // El equipo ya no existe, el usuario sigue existiendo
+        // y ya no tiene ese equipo
+        Long idEquipo = equipo.getId();
+        assertThatThrownBy(() -> equipoService.recuperarEquipo(idEquipo))
+                .isInstanceOf(EquipoServiceException.class);
+        assertThat(usuarioService.findById(usuario.getId())).isNotNull();
+        assertThat(equipoService.equiposUsuario(usuario.getId())).isEmpty();
+    }
 }
