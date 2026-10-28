@@ -144,4 +144,19 @@ public class EquipoTest {
         assertThat(equipo.getUsuarios()).isEmpty();
         assertThat(usuario.getEquipos()).isEmpty();
     }
+
+    @Test
+    public void cambiarNombreEquipo() {
+        // GIVEN
+        // Un equipo en memoria
+        Equipo equipo = new Equipo("Proyecto 1");
+
+        // WHEN
+        // Cambiamos su nombre
+        equipo.setNombre("Proyecto 2");
+
+        // THEN
+        // El nombre queda actualizado
+        assertThat(equipo.getNombre()).isEqualTo("Proyecto 2");
+    }
 }
