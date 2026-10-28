@@ -124,4 +124,11 @@ public class EquipoService {
         }
         return usuario;
     }
+
+    @Transactional(readOnly = true)
+    public boolean usuarioPerteneceAEquipo(Long idEquipo, Long idUsuario) {
+        Equipo equipo = buscarEquipo(idEquipo);
+        Usuario usuario = buscarUsuario(idUsuario);
+        return equipo.getUsuarios().contains(usuario);
+    }
 }

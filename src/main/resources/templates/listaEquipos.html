@@ -22,6 +22,12 @@
         </tr>
         </tbody>
       </table>
+      <a class="btn btn-primary" th:href="@{/equipos/nuevo}">Nuevo equipo</a>
+      <div class="row mt-2">
+        <div class="col">
+          <div class="alert alert-success" th:if="${!#strings.isEmpty(mensaje)}" th:text="${mensaje}"></div>
+        </div>
+      </div>
     </div>
   </div>
 </div>

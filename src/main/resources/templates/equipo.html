@@ -8,6 +8,15 @@
 <div class="container-fluid">
   <div class="row mt-3">
     <div class="col"><h2 th:text="'Equipo ' + ${equipo.nombre}"></h2></div>
+    <div class="alert alert-success" th:if="${!#strings.isEmpty(mensaje)}" th:text="${mensaje}"></div>
+    <div class="alert alert-danger" th:if="${!#strings.isEmpty(error)}" th:text="${error}"></div>
+
+    <form th:if="${!pertenece}" method="post" th:action="@{/equipos/{id}/unirse(id=${equipo.id})}">
+      <button type="submit" class="btn btn-success">Unirme</button>
+    </form>
+    <form th:if="${pertenece}" method="post" th:action="@{/equipos/{id}/salir(id=${equipo.id})}">
+      <button type="submit" class="btn btn-warning">Salir</button>
+    </form>
   </div>
   <div class="row mt-3">
     <div class="col">
