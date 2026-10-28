@@ -10,6 +10,9 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 @Controller
 public class EquipoController {
@@ -43,5 +46,25 @@ public class EquipoController {
             throw new EquipoNotFoundException();
         }
         return "equipo";
+    }
+
+    @GetMapping("/equipos/nuevo")
+    public String formNuevoEquipo() {
+        comprobarUsuarioLogeado();
+        return "formNuevoEquipo";
+    }
+
+    @PostMapping("/equipos/nuevo")
+    public String nuevoEquipo(@RequestParam("nombre") String nombre,
+                              RedirectAttributes flash, Model model) {
+        comprobarUsuarioLogeado();
+        try {
+            equipoService.crearEquipo(nombre);
+        } catch (EquipoServiceException e) {
+            model.addAttribute("error", e.getMessage());
+            return "formNuevoEquipo";
+        }
+        flash.addFlashAttribute("mensaje", "Equipo creado correctamente");
+        return "redirect:/equipos";
     }
 }
