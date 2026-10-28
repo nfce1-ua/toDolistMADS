@@ -133,4 +133,15 @@ public class EquipoController {
         flash.addFlashAttribute("mensaje", "Equipo modificado correctamente");
         return "redirect:/equipos/" + idEquipo;
     }
+    @PostMapping("/equipos/{id}/eliminar")
+    public String eliminarEquipo(@PathVariable(value = "id") Long idEquipo, RedirectAttributes flash) {
+        comprobarAdministrador();
+        try {
+            equipoService.eliminarEquipo(idEquipo);
+            flash.addFlashAttribute("mensaje", "Equipo eliminado correctamente");
+        } catch (EquipoServiceException e) {
+            flash.addFlashAttribute("error", e.getMessage());
+        }
+        return "redirect:/equipos";
+    }
 }

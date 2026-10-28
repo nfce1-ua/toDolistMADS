@@ -20,6 +20,11 @@
     <div th:if="${usuarioLogeado != null and usuarioLogeado.administrador}" class="mt-2">
       <a class="btn btn-primary" th:href="@{/equipos/{id}/editar(id=${equipo.id})}">Editar</a>
     </div>
+    <form method="post" th:action="@{/equipos/{id}/eliminar(id=${equipo.id})}"
+          style="display:inline"
+          onsubmit="return confirm('¿Estás seguro/a de que quieres eliminar el equipo?');">
+      <button type="submit" class="btn btn-danger">Eliminar</button>
+    </form>
   </div>
   <div class="row mt-3">
     <div class="col">
